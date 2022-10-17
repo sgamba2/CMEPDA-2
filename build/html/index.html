@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Welcome to Assig2’s documentation! &#8212; Assig2 14/10/22 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="welcome-to-assig2-s-documentation">
+<h1>Welcome to Assig2’s documentation!<a class="headerlink" href="#welcome-to-assig2-s-documentation" title="Permalink to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+<dl>
+<dt>Module: basic Python</dt><dd><p>Assignment #4 (October 7, 2021)</p>
+<p>— Goal
+Create a ProbabilityDensityFunction class that is capable of throwing
+preudo-random number with an arbitrary distribution.</p>
+<p>(In practice, start with something easy, like a triangular distribution—the
+initial debug will be easier if you know exactly what to expect.)</p>
+<p>— Specifications
+- the signature of the constructor should be __init__(self, x, y), where</p>
+<blockquote>
+<div><p>x and y are two numpy arrays sampling the pdf on a grid of values, that
+you will use to build a spline</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>[optional] add more arguments to the constructor to control the creation
+of the spline (e.g., its order)</p></li>
+<li><p>the class should be able to evaluate itself on a generic point or array of
+points</p></li>
+<li><p>the class should be able to calculate the probability for the random
+variable to be included in a generic interval</p></li>
+<li><p>the class should be able to throw random numbers according to the distribution
+that it represents</p></li>
+<li><p>[optional] how many random numbers do you have to throw to hit the
+numerical inaccuracy of your generator?</p></li>
+</ul>
+</dd>
+</dl>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.interpolate</span> <span class="kn">import</span> <span class="n">InterpolatedUnivariateSpline</span>
+<span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span>
+
+
+
+<span class="k">class</span> <span class="nc">ProbabilityDensityFunction</span><span class="p">(</span><span class="n">InterpolatedUnivariateSpline</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Class describing a probability density function.</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x : array-like</span>
+<span class="sd">        The array of x values to be passed to the pdf, assumed to be sorted.</span>
+<span class="sd">    y : array-like</span>
+<span class="sd">        The array of y values to be passed to the pdf.</span>
+<span class="sd">    k : int</span>
+<span class="sd">        The order of the splines to be created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Normalize the pdf, if it is not.</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">InterpolatedUnivariateSpline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">integral</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">y</span> <span class="o">/=</span> <span class="n">norm</span>
+
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span><span class="c1">#super richiama i metodi di classi in altre classi.</span>
+        <span class="c1">#inheritance=la classe prende i metodi/ gli attributi da altre classi</span>
+        <span class="c1"># (da quella che è tra parentesi nel titolo della classe)</span>
+
+
+        <span class="n">ycdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">integral</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">xcdf</span><span class="p">)</span> <span class="k">for</span> <span class="n">xcdf</span> <span class="ow">in</span> <span class="n">x</span><span class="p">])</span>
+        <span class="c1">#Return definite integral of the spline between two given points.</span>
+
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cdf</span> <span class="o">=</span> <span class="n">InterpolatedUnivariateSpline</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">ycdf</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+        <span class="c1">#1-D interpolating spline for a given set of data points.</span>
+        <span class="c1">#Fits a spline y = spl(x) of degree k to the provided x, y data.</span>
+        <span class="c1"># Spline function passes through all provided points.</span>
+        <span class="c1"># Equivalent to UnivariateSpline with s=0.</span>
+
+
+        <span class="c1"># Need to make sure that the vector I am passing to the ppf spline as</span>
+        <span class="c1"># the x values has no duplicates---and need to filter the y</span>
+        <span class="c1"># accordingly:</span>
+        <span class="n">xppf</span><span class="p">,</span> <span class="n">ippf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">ycdf</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">yppf</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">ippf</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span> <span class="o">=</span> <span class="n">InterpolatedUnivariateSpline</span><span class="p">(</span><span class="n">xppf</span><span class="p">,</span> <span class="n">yppf</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">prob</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x1</span><span class="p">,</span> <span class="n">x2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return the probability for the random variable to be included</span>
+<span class="sd">        between x1 and x2.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x1: float or array-like</span>
+<span class="sd">            The left bound for the integration.</span>
+<span class="sd">        x2: float or array-like</span>
+<span class="sd">            The right bound for the integration.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x2</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cdf</span><span class="p">(</span><span class="n">x1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">rnd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return an array of random values from the pdf.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        size: int</span>
+<span class="sd">            The number of random numbers to extract.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="n">size</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Assig2</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Sara Gamba.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
